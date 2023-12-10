@@ -539,6 +539,21 @@ if (class(novel) != 'try-error') {
 		file.create(paste0('${out_novel_germline}','.txt'))
 		
 	}
+	
+	
+
+	lines <- c(
+	paste("START>", "Novel_allele"),
+	paste("PASS>", nrow(novel)),
+	paste("FAIL>", "NA"),
+	paste("END>", "Novel_allele"),
+	"",
+	""
+	)
+	
+	file_path <- paste("${out_novel_file}","output.txt", sep="-")
+	cat(lines, sep = "\n", file = file_path, append = TRUE)
+	
 }else{
 	file.create(paste0('${out_novel_germline}','.txt'))
 }
@@ -556,12 +571,14 @@ input:
  set val(name), file(v_ref) from g_8_germlineFastaFile1_g_70
 
 output:
- set val(name), file("*.fasta")  into g_70_germlineFastaFile0_g_15, g_70_germlineFastaFile0_g11_22, g_70_germlineFastaFile0_g11_12, g_70_germlineFastaFile0_g11_43, g_70_germlineFastaFile0_g11_30, g_70_germlineFastaFile0_g11_49, g_70_germlineFastaFile0_g11_47
+ set val(name), file("new_V_novel_germline*")  into g_70_germlineFastaFile0_g_15, g_70_germlineFastaFile0_g11_22, g_70_germlineFastaFile0_g11_12, g_70_germlineFastaFile0_g11_43, g_70_germlineFastaFile0_g11_30, g_70_germlineFastaFile0_g11_49, g_70_germlineFastaFile0_g11_47
 
 
 script:
 
 readArray_v_ref = v_ref.toString().split(' ')[0]
+
+if(readArray_v_ref.endsWith("fasta")){
 
 """
 #!/usr/bin/env python3 
@@ -615,6 +632,19 @@ output_file_path = 'new_V_novel_germline.fasta'
 dataframe_to_fasta(df, output_file_path)
 
 """
+} else{
+	
+"""
+#!/usr/bin/env python3 
+	
+
+file_path = 'new_V_novel_germline.txt'
+
+with open(file_path, 'w'):
+    pass
+    
+"""    
+}    
 }
 
 
