@@ -4499,14 +4499,13 @@ if (!requireNamespace("jsonlite", quietly = TRUE)) {
 }
 library(jsonlite)
 
-# Create a list representing the JSON structure
 json_data <- list(
   sample = list(
     data_processing = list(
       annotation = list(
         aligner = list(
           tool = "IgBLAST",
-          version = "1.17.0"
+          version = "1.20.0"
         ),
         aligner_reference = list(
           aligner_reference_v = "GLDB_macaque_asc_ref - version  2023-10-29",
@@ -4527,8 +4526,8 @@ json_data <- list(
   )
 )
 
-# Convert the list to JSON format
-json_string <- toJSON(json_data, pretty = TRUE)
+# Convert to JSON string without enclosing scalar values in arrays
+json_string <- toJSON(json_data, pretty = TRUE, auto_unbox = TRUE)
 
 # Write the JSON string to a file
 writeLines(json_string, "annotation_metadata.json")
