@@ -32,7 +32,7 @@ params.outdir = 'results'
 
 
 // Process Parameters for First_Alignment_IgBlastn:
-params.First_Alignment_IgBlastn.num_threads = "44"
+params.First_Alignment_IgBlastn.num_threads = "10"
 params.First_Alignment_IgBlastn.ig_seqtype = "Ig"
 params.First_Alignment_IgBlastn.outfmt = "MakeDb"
 params.First_Alignment_IgBlastn.num_alignments_V = "10"
@@ -74,7 +74,7 @@ params.Undocumented_Alleles.min_frac = 0.75
 // part 3
 
 // Process Parameters for Second_Alignment_IgBlastn:
-params.Second_Alignment_IgBlastn.num_threads = "44"
+params.Second_Alignment_IgBlastn.num_threads = "10"
 params.Second_Alignment_IgBlastn.ig_seqtype = "Ig"
 params.Second_Alignment_IgBlastn.outfmt = "MakeDb"
 params.Second_Alignment_IgBlastn.num_alignments_V = "10"
@@ -160,7 +160,7 @@ params.TIgGER_bayesian_genotype_Inference_j_call.single_assignments = "true"
 // part 6
 
 // Process Parameters for Third_Alignment_IgBlastn:
-params.Third_Alignment_IgBlastn.num_threads = "44"
+params.Third_Alignment_IgBlastn.num_threads = "10"
 params.Third_Alignment_IgBlastn.ig_seqtype = "Ig"
 params.Third_Alignment_IgBlastn.outfmt = "MakeDb"
 params.Third_Alignment_IgBlastn.num_alignments_V = "10"
