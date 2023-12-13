@@ -4498,9 +4498,6 @@ if (!requireNamespace("jsonlite", quietly = TRUE)) {
 }
 library(jsonlite)
 
-#igblastn version
-ig_version = system2("docker run immcantation/suite:4.4.0 igblastn -version | grep igblastn", stdout = TRUE)
-print(ig_version)
 
 json_data <- list(
   sample = list(
