@@ -1,36 +1,6 @@
 $HOSTNAME = ""
 params.outdir = 'results'  
 
-// Add for each process an option to change the parameters. Default is the set params
-//* autofill
-// part 1
-//* params.edit_First_Alignment_IgBlastn_params =  "no"  //* @dropdown @options:"yes","no"  @show_settings:"IgBlastn"
-//* params.edit_First_Alignment_MakeDb_params =  "no"  //* @dropdown @options:"yes","no" @show_settings:"MakeDb"
-//* params.edit_First_Alignment_Collapse_AIRRseq_params =  "no"  //* @dropdown @options:"yes","no" @show_settings:"Collapse_AIRRseq"
-// part 2
-//* params.edit_Undocumented_Alleles_params =  "no"  //* @dropdown @options:"yes","no" @show_settings:"Undocumented_Alleles"
-// part 3
-//* params.edit_Second_Alignment_IgBlastn_params =  "no"  //* @dropdown @options:"yes","no"  @show_settings:"IgBlastn"
-//* params.edit_Second_Alignment_MakeDb_params =  "no"  //* @dropdown @options:"yes","no" @show_settings:"MakeDb"
-//* params.edit_Second_Alignment_Collapse_AIRRseq_params =  "no"  //* @dropdown @options:"yes","no" @show_settings:"Collapse_AIRRseq"
-// part 4
-//* params.edit_Clone_AIRRseq_First_CreateGermlines_params =  "no"  //* @dropdown @options:"yes","no" @show_settings:"CreateGermlines"
-//* params.edit_Clone_AIRRseq_DefineClones_params =  "no"  //* @dropdown @options:"yes","no" @show_settings:"DefineClones"
-//* params.edit_Clone_AIRRseq_Second_CreateGermlines_params =  "no"  //* @dropdown @options:"yes","no" @show_settings:"CreateGermlines"
-// part 5
-//* params.edit_TIgGER_bayesian_genotype_Inference_d_call_params =  "no"  //* @dropdown @options:"yes","no" @show_settings:"TIgGER_bayesian_genotype_Inference"
-//* params.edit_TIgGER_bayesian_genotype_Inference_j_call_params =  "no"  //* @dropdown @options:"yes","no" @show_settings:"TIgGER_bayesian_genotype_Inference"
-//* params.edit_TIgGER_bayesian_genotype_Inference_v_call_params =  "no"  //* @dropdown @options:"yes","no" @show_settings:"TIgGER_bayesian_genotype_Inference"
-// part 6
-//* params.edit_Third_Alignment_IgBlastn_params =  "no"  //* @dropdown @options:"yes","no"  @show_settings:"IgBlastn"
-//* params.edit_Third_Alignment_MakeDb_params =  "no"  //* @dropdown @options:"yes","no" @show_settings:"MakeDb"
-//* params.edit_Third_Alignment_Collapse_AIRRseq_params =  "no"  //* @dropdown @options:"yes","no" @show_settings:"Collapse_AIRRseq"
-// part 7
-//params.edit_ogrdbstats_report_params = params.pipeline.//params.edit_ogrdbstats_report_params
-
-//* autofill
-
-
 // Process Parameters for First_Alignment_IgBlastn:
 params.First_Alignment_IgBlastn.num_threads = "10"
 params.First_Alignment_IgBlastn.ig_seqtype = "Ig"
@@ -144,11 +114,13 @@ params.TIgGER_bayesian_genotype_Inference_v_call.seq = "sequence_alignment"
 params.TIgGER_bayesian_genotype_Inference_v_call.find_unmutated = "false"
 params.TIgGER_bayesian_genotype_Inference_v_call.single_assignments = "false"
 
+
 // Process Parameters for TIgGER_bayesian_genotype_Inference_d_call:
 params.TIgGER_bayesian_genotype_Inference_d_call.call = "d_call"
 params.TIgGER_bayesian_genotype_Inference_d_call.seq = "sequence_alignment"
 params.TIgGER_bayesian_genotype_Inference_d_call.find_unmutated = "false"
 params.TIgGER_bayesian_genotype_Inference_d_call.single_assignments = "true"
+params.TIgGER_bayesian_genotype_Inference_d_call.chain = params.chain
 
 // Process Parameters for TIgGER_bayesian_genotype_Inference_j_call:
 params.TIgGER_bayesian_genotype_Inference_j_call.call = "j_call"
@@ -186,7 +158,6 @@ params.Third_Alignment_Collapse_AIRRseq.name_alignment = "_Finale"
 // Process Parameters for ogrdbstats_report:
 params.ogrdbstats_report.chain = params.chain
 
-
 if (!params.v_germline_file){params.v_germline_file = ""} 
 if (!params.d_germline){params.d_germline = ""} 
 if (!params.j_germline){params.j_germline = ""} 
@@ -201,7 +172,7 @@ ch_empty_file_3 = file("$baseDir/.emptyfiles/NO_FILE_3", hidden:true)
 ch_empty_file_4 = file("$baseDir/.emptyfiles/NO_FILE_4", hidden:true)
 
 Channel.fromPath(params.v_germline_file, type: 'any').map{ file -> tuple(file.baseName, file) }.into{g_2_germlineFastaFile_g_15;g_2_germlineFastaFile_g_68;g_2_germlineFastaFile_g_8;g_2_germlineFastaFile_g0_22;g_2_germlineFastaFile_g0_12;g_2_germlineFastaFile_g0_43;g_2_germlineFastaFile_g0_30;g_2_germlineFastaFile_g0_49;g_2_germlineFastaFile_g0_47}
-Channel.fromPath(params.d_germline, type: 'any').map{ file -> tuple(file.baseName, file) }.into{g_3_germlineFastaFile_g_30;g_3_germlineFastaFile_g0_16;g_3_germlineFastaFile_g0_12;g_3_germlineFastaFile_g11_16;g_3_germlineFastaFile_g11_12;g_3_germlineFastaFile_g14_0;g_3_germlineFastaFile_g14_1}
+Channel.fromPath(params.d_germline, type: 'any').map{ file -> tuple(file.baseName, file) }.into{g_3_germlineFastaFile_g_75;g_3_germlineFastaFile_g0_16;g_3_germlineFastaFile_g0_12;g_3_germlineFastaFile_g11_16;g_3_germlineFastaFile_g11_12;g_3_germlineFastaFile_g14_0;g_3_germlineFastaFile_g14_1}
 Channel.fromPath(params.j_germline, type: 'any').map{ file -> tuple(file.baseName, file) }.into{g_4_germlineFastaFile_g_31;g_4_germlineFastaFile_g0_17;g_4_germlineFastaFile_g0_12;g_4_germlineFastaFile_g11_17;g_4_germlineFastaFile_g11_12;g_4_germlineFastaFile_g14_0;g_4_germlineFastaFile_g14_1}
 g_38_outputFileTxt_g0_9 = file(params.auxiliary_data, type: 'any')
 g_38_outputFileTxt_g11_9 = file(params.auxiliary_data, type: 'any')
@@ -2324,7 +2295,7 @@ input:
  set val(name1),file(source_airrFile) from g_15_outputFileTSV0_g14_9
 
 output:
- set val(outname),file(outfile)  into g14_9_outputFileTSV0_g_29, g14_9_outputFileTSV0_g_30, g14_9_outputFileTSV0_g_31
+ set val(outname),file(outfile)  into g14_9_outputFileTSV0_g_29, g14_9_outputFileTSV0_g_31, g14_9_outputFileTSV0_g_75
  file "*.pdf" optional true  into g14_9_outputFilePdf11
  set val(name), file("*txt")  into g14_9_logFile2_g_63
  file "*png"  into g14_9_outputFile33
@@ -2466,6 +2437,129 @@ cat(lines, sep = "\n", file = file_path, append = TRUE)
 """
 }
 
+//* params.heavy_chain =  "yes"  //* @checkbox
+
+
+process TIgGER_bayesian_genotype_Inference_d_call {
+
+publishDir params.outdir, mode: 'copy', saveAs: {filename -> if (filename =~ /${call}_genotype_report.tsv$/) "genotype_report/$filename"}
+input:
+ set val(name),file(airrFile) from g14_9_outputFileTSV0_g_75
+ set val(name1), file(germline_file) from g_3_germlineFastaFile_g_75
+
+output:
+ set val("${call}_genotype"),file("${call}_genotype_report.tsv") optional true  into g_75_outputFileTSV00
+ set val("${call}_personal_reference"), file("${call}_personal_reference.fasta") optional true  into g_75_germlineFastaFile1_g21_16, g_75_germlineFastaFile1_g21_12
+
+script:
+
+// general params
+call = params.TIgGER_bayesian_genotype_Inference_d_call.call
+seq = params.TIgGER_bayesian_genotype_Inference_d_call.seq
+find_unmutated = params.TIgGER_bayesian_genotype_Inference_d_call.find_unmutated
+single_assignments = params.TIgGER_bayesian_genotype_Inference_d_call.single_assignments
+germline_file = germline_file.name.startsWith('NO_FILE') ? "" : "${germline_file}"
+
+
+
+if (params.heavy_chain == "yes"){
+	"""
+	#!/usr/bin/env Rscript
+	
+	library(tigger)
+	library(data.table)
+	
+	## get genotyped alleles
+	GENOTYPED_ALLELES <- function(y) {
+	  m <- which.max(as.numeric(y[2:5]))
+	  paste0(unlist(strsplit((y[1]), ','))[1:m], collapse = ",")
+	}
+	
+	# read data
+	data <- fread("${airrFile}", data.table=FALSE)
+	find_unmutated_ <- "${find_unmutated}"=="true"
+	germline_db <- if("${germline_file}"!="") readIgFasta("${germline_file}") else NA
+	
+	# get the params based on the call column
+	
+	params <- list("v_call" = c(0.6, 0.4, 0.4, 0.35, 0.25, 0.25, 0.25, 0.25, 0.25),
+				   "d_call" = c(0.5, 0.5, 0, 0, 0, 0, 0, 0, 0),
+				   "j_call" = c(0.5, 0.5, 0, 0, 0, 0, 0, 0, 0))
+	
+	if("${single_assignments}"=="true"){
+		data <- data[!grepl(pattern = ',', data[["${call}"]]),]
+	}
+	
+	# remove rows where there are missing values in the call column
+	
+	data <- data[!is.na(data[["${call}"]]),]
+	
+	# infer the genotype using tigger
+	geno <-
+	      tigger::inferGenotypeBayesian(
+	        data,
+	        find_unmutated = find_unmutated_,
+	        germline_db = germline_db,
+	        v_call = "${call}",
+	        seq = "${seq}",
+	        priors = params[["${call}"]]
+	      )
+	
+	print(geno)
+	
+	geno[["genotyped_alleles"]] <-
+	  apply(geno[, c(2, 6:9)], 1, function(y) {
+	    GENOTYPED_ALLELES(y)
+	  })
+	
+	# write the report
+	write.table(geno, file = paste0("${call}","_genotype_report.tsv"), row.names = F, sep = "\t")
+	
+	# create the personal reference set
+	NOTGENO.IND <- !(sapply(strsplit(names(germline_db), '*', fixed = T), '[', 1) %in%  geno[["gene"]])
+	germline_db_new <- germline_db[NOTGENO.IND]
+	
+	for (i in 1:nrow(geno)) {
+	  gene <- geno[i, "gene"]
+	  alleles <- geno[i, "genotyped_alleles"]
+	  if(alleles=="") alleles <- geno[i, "alleles"]
+	  alleles <- unlist(strsplit(alleles, ','))
+	  IND <- names(germline_db) %in%  paste(gene, alleles, sep = '*')
+	  germline_db_new <- c(germline_db_new, germline_db[IND])
+	}
+	
+	# writing imgt gapped fasta reference
+	writeFasta(germline_db_new, file = paste0("${call}","_personal_reference.fasta"))
+	
+	"""
+}else{
+
+	"""
+	#!/usr/bin/env Rscript
+	
+	library(tigger)
+	library(data.table)
+	
+	## get genotyped alleles
+	GENOTYPED_ALLELES <- function(y) {
+	  m <- which.max(as.numeric(y[2:5]))
+	  paste0(unlist(strsplit((y[1]), ','))[1:m], collapse = ",")
+	}
+	
+	# read data
+	data <- fread("${airrFile}", data.table=FALSE)
+	find_unmutated_ <- "${find_unmutated}"=="true"
+	germline_db <- if("${germline_file}"!="") readIgFasta("${germline_file}") else NA
+	
+	# writing imgt gapped fasta reference
+	writeFasta(germline_db, file = paste0("${call}","_personal_reference.fasta"))
+	
+	"""
+}
+
+
+}
+
 
 process TIgGER_bayesian_genotype_Inference_j_call {
 
@@ -2485,101 +2579,6 @@ call = params.TIgGER_bayesian_genotype_Inference_j_call.call
 seq = params.TIgGER_bayesian_genotype_Inference_j_call.seq
 find_unmutated = params.TIgGER_bayesian_genotype_Inference_j_call.find_unmutated
 single_assignments = params.TIgGER_bayesian_genotype_Inference_j_call.single_assignments
-
-germline_file = germline_file.name.startsWith('NO_FILE') ? "" : "${germline_file}"
-
-
-"""
-#!/usr/bin/env Rscript
-
-library(tigger)
-library(data.table)
-
-## get genotyped alleles
-GENOTYPED_ALLELES <- function(y) {
-  m <- which.max(as.numeric(y[2:5]))
-  paste0(unlist(strsplit((y[1]), ','))[1:m], collapse = ",")
-}
-
-# read data
-data <- fread("${airrFile}", data.table=FALSE)
-find_unmutated_ <- "${find_unmutated}"=="true"
-germline_db <- if("${germline_file}"!="") readIgFasta("${germline_file}") else NA
-
-# get the params based on the call column
-
-params <- list("v_call" = c(0.6, 0.4, 0.4, 0.35, 0.25, 0.25, 0.25, 0.25, 0.25),
-			   "d_call" = c(0.5, 0.5, 0, 0, 0, 0, 0, 0, 0),
-			   "j_call" = c(0.5, 0.5, 0, 0, 0, 0, 0, 0, 0))
-
-if("${single_assignments}"=="true"){
-	data <- data[!grepl(pattern = ',', data[["${call}"]]),]
-}
-
-# remove rows where there are missing values in the call column
-
-data <- data[!is.na(data[["${call}"]]),]
-
-# infer the genotype using tigger
-geno <-
-      tigger::inferGenotypeBayesian(
-        data,
-        find_unmutated = find_unmutated_,
-        germline_db = germline_db,
-        v_call = "${call}",
-        seq = "${seq}",
-        priors = params[["${call}"]]
-      )
-
-print(geno)
-
-geno[["genotyped_alleles"]] <-
-  apply(geno[, c(2, 6:9)], 1, function(y) {
-    GENOTYPED_ALLELES(y)
-  })
-
-# write the report
-write.table(geno, file = paste0("${call}","_genotype_report.tsv"), row.names = F, sep = "\t")
-
-# create the personal reference set
-NOTGENO.IND <- !(sapply(strsplit(names(germline_db), '*', fixed = T), '[', 1) %in%  geno[["gene"]])
-germline_db_new <- germline_db[NOTGENO.IND]
-
-for (i in 1:nrow(geno)) {
-  gene <- geno[i, "gene"]
-  alleles <- geno[i, "genotyped_alleles"]
-  if(alleles=="") alleles <- geno[i, "alleles"]
-  alleles <- unlist(strsplit(alleles, ','))
-  IND <- names(germline_db) %in%  paste(gene, alleles, sep = '*')
-  germline_db_new <- c(germline_db_new, germline_db[IND])
-}
-
-# writing imgt gapped fasta reference
-writeFasta(germline_db_new, file = paste0("${call}","_personal_reference.fasta"))
-
-"""
-
-}
-
-
-process TIgGER_bayesian_genotype_Inference_d_call {
-
-publishDir params.outdir, mode: 'copy', saveAs: {filename -> if (filename =~ /${call}_genotype_report.tsv$/) "genotype_report/$filename"}
-input:
- set val(name),file(airrFile) from g14_9_outputFileTSV0_g_30
- set val(name1), file(germline_file) from g_3_germlineFastaFile_g_30
-
-output:
- set val("${call}_genotype"),file("${call}_genotype_report.tsv")  into g_30_outputFileTSV00
- set val("${call}_personal_reference"), file("${call}_personal_reference.fasta")  into g_30_germlineFastaFile1_g21_16, g_30_germlineFastaFile1_g21_12
-
-script:
-
-// general params
-call = params.TIgGER_bayesian_genotype_Inference_d_call.call
-seq = params.TIgGER_bayesian_genotype_Inference_d_call.seq
-find_unmutated = params.TIgGER_bayesian_genotype_Inference_d_call.find_unmutated
-single_assignments = params.TIgGER_bayesian_genotype_Inference_d_call.single_assignments
 
 germline_file = germline_file.name.startsWith('NO_FILE') ? "" : "${germline_file}"
 
@@ -3356,7 +3355,7 @@ cat(lines, sep = "\n", file = file_path, append = TRUE)
 process Third_Alignment_D_MakeBlastDb {
 
 input:
- set val(db_name), file(germlineFile) from g_30_germlineFastaFile1_g21_16
+ set val(db_name), file(germlineFile) from g_75_germlineFastaFile1_g21_16
 
 output:
  file "${db_name}"  into g21_16_germlineDb0_g21_9
@@ -3458,7 +3457,7 @@ input:
  set val(name),file(fastaFile) from g_44_fastaFile_g21_12
  set val(name_igblast),file(igblastOut) from g21_9_igblastOut0_g21_12
  set val(name1), file(v_germline_file) from g_29_germlineFastaFile1_g21_12
- set val(name2), file(d_germline_file) from g_30_germlineFastaFile1_g21_12
+ set val(name2), file(d_germline_file) from g_75_germlineFastaFile1_g21_12
  set val(name3), file(j_germline_file) from g_31_germlineFastaFile1_g21_12
 
 output:
@@ -4498,6 +4497,10 @@ if (!requireNamespace("jsonlite", quietly = TRUE)) {
   install.packages("jsonlite")
 }
 library(jsonlite)
+
+#igblastn version
+ig_version = system2("docker run immcantation/suite:4.4.0 igblastn -version | grep igblastn", stdout = TRUE)
+print(ig_version)
 
 json_data <- list(
   sample = list(
