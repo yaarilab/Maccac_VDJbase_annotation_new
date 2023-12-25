@@ -170,7 +170,6 @@ if (!params.d_germline){params.d_germline = ""}
 if (!params.j_germline){params.j_germline = ""} 
 if (!params.auxiliary_data){params.auxiliary_data = ""} 
 if (!params.airr_seq){params.airr_seq = ""} 
-if (!params.fake_igblast_log){params.fake_igblast_log = ""} 
 if (!params.custom_internal_data){params.custom_internal_data = ""} 
 // Stage empty file to be used as an optional input where required
 ch_empty_file_1 = file("$baseDir/.emptyfiles/NO_FILE_1", hidden:true)
@@ -184,7 +183,6 @@ g_38_outputFileTxt_g0_9 = file(params.auxiliary_data, type: 'any')
 g_38_outputFileTxt_g11_9 = file(params.auxiliary_data, type: 'any')
 g_38_outputFileTxt_g21_9 = file(params.auxiliary_data, type: 'any')
 Channel.fromPath(params.airr_seq, type: 'any').map{ file -> tuple(file.baseName, file) }.into{g_44_fastaFile_g_73;g_44_fastaFile_g0_9;g_44_fastaFile_g0_12}
-g_69_logFile_g_63 = file(params.fake_igblast_log, type: 'any')
 g_74_outputFileTxt_g0_9 = file(params.custom_internal_data, type: 'any')
 
 
@@ -3728,7 +3726,6 @@ publishDir params.outdir, mode: 'copy', saveAs: {filename -> if (filename =~ /.*
 input:
  set val(name), file(first_igblast) from g0_27_logFile0_g_63
  set val(name2), file(clone) from g14_9_logFile2_g_63
- file fake from g_69_logFile_g_63
 
 output:
  file "*csv"  into g_63_outputFileCSV00
@@ -3737,23 +3734,17 @@ output:
 script:
 
 readArray_first_igblast = first_igblast.toString().split(' ')
-readArray_third_igblast = third_igblast.toString().split(' ')
 readArray_clone = clone.toString().split(' ')
 
-r_second_igblast = second_igblast.toString().split(' ')[0]
-try_second_igblast = r_second_igblast.endsWith(".txt") ? second_igblast : fake
-readArray_second_igblast = try_second_igblast.toString().split(' ')
 
 
 """
 #!/usr/bin/env Rscript 
 
 x1<-"${readArray_first_igblast[0]}"
-x2<-"${readArray_second_igblast[0]}"
-x3<-"${readArray_clone[0]}"
-x4<-"${readArray_third_igblast[0]}"
+x2<-"${readArray_clone[0]}"
 
-file_names <- c(x1, x2, x3,x4)
+file_names <- c(x1, x2)
 output_file <- "output.txt"
 content <- sapply(file_names, function(file) {
   readLines(file)
