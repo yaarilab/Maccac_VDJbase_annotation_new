@@ -176,7 +176,7 @@ ch_empty_file_1 = file("$baseDir/.emptyfiles/NO_FILE_1", hidden:true)
 ch_empty_file_2 = file("$baseDir/.emptyfiles/NO_FILE_2", hidden:true)
 ch_empty_file_3 = file("$baseDir/.emptyfiles/NO_FILE_3", hidden:true)
 
-Channel.fromPath(params.v_germline_file, type: 'any').map{ file -> tuple(file.baseName, file) }.into{g_2_germlineFastaFile_g_8;g_2_germlineFastaFile_g_68;g_2_germlineFastaFile_g0_22;g_2_germlineFastaFile_g0_43;g_2_germlineFastaFile_g0_47;g_2_germlineFastaFile_g0_49;g_2_germlineFastaFile_g0_30;g_2_germlineFastaFile_g0_12}
+Channel.fromPath(params.v_germline_file, type: 'any').map{ file -> tuple(file.baseName, file) }.into{g_2_germlineFastaFile_g_8;g_2_germlineFastaFile_g_68;g_2_germlineFastaFile_g0_22;g_2_germlineFastaFile_g0_43;g_2_germlineFastaFile_g0_47;g_2_germlineFastaFile_g0_12}
 Channel.fromPath(params.d_germline, type: 'any').map{ file -> tuple(file.baseName, file) }.into{g_3_germlineFastaFile_g_75;g_3_germlineFastaFile_g0_16;g_3_germlineFastaFile_g0_12;g_3_germlineFastaFile_g14_0;g_3_germlineFastaFile_g14_1;g_3_germlineFastaFile_g11_16;g_3_germlineFastaFile_g11_12}
 Channel.fromPath(params.j_germline, type: 'any').map{ file -> tuple(file.baseName, file) }.into{g_4_germlineFastaFile_g_31;g_4_germlineFastaFile_g0_17;g_4_germlineFastaFile_g0_12;g_4_germlineFastaFile_g14_0;g_4_germlineFastaFile_g14_1;g_4_germlineFastaFile_g11_17;g_4_germlineFastaFile_g11_12}
 g_38_outputFileTxt_g0_9 = file(params.auxiliary_data, type: 'any')
@@ -370,9 +370,9 @@ input:
  set val(name3), file(j_germline_file) from g_4_germlineFastaFile_g0_12
 
 output:
- set val(name_igblast),file("*_db-pass.tsv") optional true  into g0_12_outputFileTSV0_g0_43, g0_12_outputFileTSV0_g0_47, g0_12_outputFileTSV0_g0_19, g0_12_outputFileTSV0_g0_27, g0_12_outputFileTSV0_g0_49, g0_12_outputFileTSV0_g0_30
+ set val(name_igblast),file("*_db-pass.tsv") optional true  into g0_12_outputFileTSV0_g0_43, g0_12_outputFileTSV0_g0_47, g0_12_outputFileTSV0_g0_19, g0_12_outputFileTSV0_g0_27
  set val("reference_set"), file("${reference_set}") optional true  into g0_12_germlineFastaFile1_g_68
- set val(name_igblast),file("*_db-fail.tsv") optional true  into g0_12_outputFileTSV2_g0_27, g0_12_outputFileTSV2_g0_49, g0_12_outputFileTSV2_g0_30
+ set val(name_igblast),file("*_db-fail.tsv") optional true  into g0_12_outputFileTSV2_g0_27
 
 script:
 
@@ -776,6 +776,7 @@ close OUT;
 process First_Alignment_render_after_make_db_report {
 
 publishDir params.outdir, mode: 'copy', saveAs: {filename -> if (filename =~ /.*.html$/) "first_alignment_reports/$filename"}
+publishDir params.outdir, mode: 'copy', saveAs: {filename -> if (filename =~ /.*.html$/) "first_alignment_reports/$filename"}
 input:
  file rmk from g0_43_rMarkdown0_g0_47
  set val(name4), file(v_ref) from g_2_germlineFastaFile_g0_47
@@ -803,8 +804,8 @@ input:
  set val(name),file(airrFile) from g0_12_outputFileTSV0_g0_19
 
 output:
- set val(name), file("${outfile}"+"passed.tsv") optional true  into g0_19_outputFileTSV0_g0_27, g0_19_outputFileTSV0_g0_49, g0_19_outputFileTSV0_g0_30, g0_19_outputFileTSV0_g_68, g0_19_outputFileTSV0_g_8, g0_19_outputFileTSV0_g_80
- set val(name), file("${outfile}"+"failed*") optional true  into g0_19_outputFileTSV1_g0_27, g0_19_outputFileTSV1_g0_49, g0_19_outputFileTSV1_g0_30
+ set val(name), file("${outfile}"+"passed.tsv") optional true  into g0_19_outputFileTSV0_g0_27, g0_19_outputFileTSV0_g_68, g0_19_outputFileTSV0_g_8, g0_19_outputFileTSV0_g_80
+ set val(name), file("${outfile}"+"failed*") optional true  into g0_19_outputFileTSV1_g0_27
 
 script:
 conscount_min = params.First_Alignment_Collapse_AIRRseq.conscount_min
@@ -3483,184 +3484,6 @@ run_ogrdbstats \
 
 """
 
-}
-
-g0_12_outputFileTSV2_g0_30= g0_12_outputFileTSV2_g0_30.ifEmpty([""]) 
-g0_19_outputFileTSV1_g0_30= g0_19_outputFileTSV1_g0_30.ifEmpty([""]) 
-
-
-process First_Alignment_after_collapse_report {
-
-input:
- set val(name), file(makeDb_pass) from g0_12_outputFileTSV0_g0_30
- set val(name1), file(makeDb_fail) from g0_12_outputFileTSV2_g0_30
- set val(name2), file(collapse_pass) from g0_19_outputFileTSV0_g0_30
- set val(name3), file(collapse_fail) from g0_19_outputFileTSV1_g0_30
- set val(name4), file(v_ref) from g_2_germlineFastaFile_g0_30
-
-output:
- file "*.rmd"  into g0_30_rMarkdown0_g0_49
-
-shell:
-
-readArray_makeDb_pass = makeDb_pass.toString().split(' ')[0]
-readArray_makeDb_fail = makeDb_fail.toString().split(' ')[0]
-readArray_collapse_pass = collapse_pass.toString().split(' ')[0]
-readArray_collapse_fail = collapse_fail.toString().split(' ')[0]
-readArray_v_ref = v_ref.toString().split(' ')[0]
-
-'''
-#!/usr/bin/env perl
-
-
-my $script = <<'EOF';
-
-
-```{r echo=FALSE,message = FALSE}
-library(ggplot2)
-library(rlang)
-library(alakazam)
-library(dplyr)
-library(Biostrings)
-
-makeDb_pass<-read.csv("!{readArray_makeDb_pass}", sep="\t")
-collapse_pass<-read.csv("!{readArray_collapse_pass}", sep="\t")
-
-collapse_fail<- tryCatch(read.csv(!{readArray_collapse_fail}, sep="\t"), error=function(e) NULL)
-
-if(!is.null(collapse_fail)){
-	threshold_column <- if("consensus_count" %in% names(collapse_fail)) "consensus_count" else "duplicate_count"
-
-	threshold_collapse <- max(collapse_fail[[threshold_column]])
-	
-	
-	collapse_db <- rbind(collapse_pass, collapse_fail)
-
-}else{
-	threshold_column <- if("consensus_count" %in% names(collapse_pass)) "consensus_count" else "duplicate_count"
-
-	threshold_collapse <- max(collapse_pass[[threshold_column]])
-	
-	
-	collapse_db <- collapse_pass
-
-}
-
-
-```
-
-
-### Plot duplicated column after collapse
-
-```{r echo=FALSE,message = FALSE,fig.width=30,fig.height=15}
-
-p1 <- ggplot(collapse_db, aes(!!sym(threshold_column))) +
-geom_histogram(bins = 100) +
-geom_vline(xintercept=threshold_collapse, linetype="dotted", col = "red")
-
-print(p1)
-
-```
-
-
-### Number of multiple assignment per gene (IMGT / ASC)
-
-```{r echo=FALSE,message = FALSE,fig.width=30,fig.height=15}
-
-collapse_db[["v_gene"]] <- getGene(collapse_db[["v_call"]], first = F, collapse = TRUE, strip_d = FALSE)
-
-plot1 <- collapse_db %>% filter(!grepl(",", v_gene)) %>% group_by(v_gene) %>%
-			summarise(n_read = n(), multiple = sum(grepl(",", v_call)), single = n_read - multiple,
-					p_multiple = multiple/n_read*100, p_single = single/n_read*100) %>%
-			select(v_gene, p_single, p_multiple) %>%
-			reshape2::melt() %>%
-			ggplot(mapping = aes(v_gene, value, fill = variable)) +
-			geom_col() +
-			theme_bw() +
-			theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 0.5))
-
-print(plot1)
-
-```
-
-
-### Number of multiple assignment per gene (IMGT / ASC) collapse pass
-
-```{r echo=FALSE,message = FALSE,fig.width=30,fig.height=15}
-
-plot2 <- collapse_db %>% filter(!grepl(",", v_gene)) %>% 
-			mutate(collapse_status = !!sym(threshold_column)>= threshold_collapse) %>% 
-			group_by(collapse_status, v_gene) %>%
-			summarise(n_read = n(), multiple = sum(grepl(",", v_call)), single = n_read - multiple,
-					p_multiple = multiple/n_read*100, p_single = single/n_read*100) %>%
-			select(collapse_status, v_gene, p_single, p_multiple) %>%
-			reshape2::melt(id.vars = c("v_gene", "collapse_status")) %>%
-			ggplot(mapping = aes(v_gene, value, fill = variable)) +
-			geom_col() +
-			theme_bw() +
-			theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 0.5)) +
-			facet_grid(.~collapse_status)
-
-print(plot2)
-
-```
-
-
-### Check the number of alleles, and the amount for each gene. (IMGT / ASC)
-
-```{r echo=FALSE,message = FALSE,fig.width=35,fig.height=50}
-plot3 <- collapse_db %>%
-  filter(!!sym(threshold_column) >= threshold_collapse, !grepl(",", v_call)) %>%
-  group_by(v_gene) %>%
-  mutate(n_read = n()) %>%
-  group_by(v_gene, v_call) %>%
-  summarise(n_calls = n(), p_calls = n_calls / n_read * 100) %>%
-  arrange(v_gene, desc(p_calls)) %>%
-  ggplot(aes(x = reorder(v_call, p_calls), y = p_calls)) + # Modified aes() function
-  geom_col() + 
-  theme_bw() +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 0.5)) +
-  facet_wrap(.~v_gene, ncol = 4, scales = "free_x")
-
-print(plot3)
-
-```
-
-
-EOF
-	
-open OUT, ">after_collapse_report_!{name}.rmd";
-print OUT $script;
-close OUT;
-
-'''
-
-}
-
-g0_12_outputFileTSV2_g0_49= g0_12_outputFileTSV2_g0_49.ifEmpty([""]) 
-g0_19_outputFileTSV1_g0_49= g0_19_outputFileTSV1_g0_49.ifEmpty([""]) 
-
-
-process First_Alignment_render_after_collapse_report {
-
-publishDir params.outdir, mode: 'copy', saveAs: {filename -> if (filename =~ /.*.html$/) "first_alignment_reports/$filename"}
-input:
- set val(name), file(makeDb_pass) from g0_12_outputFileTSV0_g0_49
- set val(name1), file(makeDb_fail) from g0_12_outputFileTSV2_g0_49
- set val(name2), file(collapse_pass) from g0_19_outputFileTSV0_g0_49
- set val(name3), file(collapse_fail) from g0_19_outputFileTSV1_g0_49
- set val(name4), file(v_ref) from g_2_germlineFastaFile_g0_49
- file rmk from g0_30_rMarkdown0_g0_49
-
-output:
- file "*.html"  into g0_49_outputFileHTML00
- file "*csv" optional true  into g0_49_csvFile11
-
-"""
-#!/usr/bin/env Rscript 
-
-rmarkdown::render("${rmk}", clean=TRUE, output_format="html_document", output_dir=".")
-"""
 }
 
 g0_12_outputFileTSV2_g0_27= g0_12_outputFileTSV2_g0_27.ifEmpty([""]) 
