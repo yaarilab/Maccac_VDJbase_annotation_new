@@ -43,7 +43,7 @@ params.Undocumented_Alleles.min_frac = 0.75
 
 // part 3
 
-params.make_igblast_ndm_second_alignment.ndm_chain = "IGH"
+params.make_igblast_ndm_second_alignment.ndm_chain = params.ndm_chain
 
 // Process Parameters for Second_Alignment_IgBlastn:
 params.Second_Alignment_IgBlastn.num_threads = "10"
@@ -134,7 +134,7 @@ params.TIgGER_bayesian_genotype_Inference_j_call.single_assignments = "true"
 
 // part 6
 
-params.make_igblast_ndm_third_alignment.ndm_chain = "IGH"
+params.make_igblast_ndm_third_alignment.ndm_chain = params.ndm_chain
 
 // Process Parameters for Third_Alignment_IgBlastn:
 params.Third_Alignment_IgBlastn.num_threads = "10"
