@@ -24,6 +24,8 @@ params.First_Alignment_Collapse_AIRRseq.conscount_min = 2
 params.First_Alignment_Collapse_AIRRseq.n_max = 10
 params.First_Alignment_Collapse_AIRRseq.name_alignment = "_First_Alignment"
 
+params.First_Alignment_alignment_report_table.name_alignment = "_First_Alignment"
+
 // Process Parameters for ogrdbstats_report_first_alignment:
 params.ogrdbstats_report_first_alignment.chain = params.chain
 
@@ -179,9 +181,9 @@ ch_empty_file_3 = file("$baseDir/.emptyfiles/NO_FILE_3", hidden:true)
 Channel.fromPath(params.v_germline_file, type: 'any').map{ file -> tuple(file.baseName, file) }.into{g_2_germlineFastaFile_g_8;g_2_germlineFastaFile_g_68;g_2_germlineFastaFile_g0_22;g_2_germlineFastaFile_g0_43;g_2_germlineFastaFile_g0_47;g_2_germlineFastaFile_g0_12}
 Channel.fromPath(params.d_germline, type: 'any').map{ file -> tuple(file.baseName, file) }.into{g_3_germlineFastaFile_g_75;g_3_germlineFastaFile_g0_16;g_3_germlineFastaFile_g0_12;g_3_germlineFastaFile_g14_0;g_3_germlineFastaFile_g14_1;g_3_germlineFastaFile_g11_16;g_3_germlineFastaFile_g11_12}
 Channel.fromPath(params.j_germline, type: 'any').map{ file -> tuple(file.baseName, file) }.into{g_4_germlineFastaFile_g_31;g_4_germlineFastaFile_g0_17;g_4_germlineFastaFile_g0_12;g_4_germlineFastaFile_g14_0;g_4_germlineFastaFile_g14_1;g_4_germlineFastaFile_g11_17;g_4_germlineFastaFile_g11_12}
-g_38_outputFileTxt_g0_9 = file(params.auxiliary_data, type: 'any')
 g_38_outputFileTxt_g11_9 = file(params.auxiliary_data, type: 'any')
 g_38_outputFileTxt_g21_9 = file(params.auxiliary_data, type: 'any')
+g_38_outputFileTxt_g0_9 = file(params.auxiliary_data, type: 'any')
 Channel.fromPath(params.airr_seq, type: 'any').map{ file -> tuple(file.baseName, file) }.into{g_44_fastaFile_g_73;g_44_fastaFile_g0_9;g_44_fastaFile_g0_12}
 g_74_outputFileTxt_g0_9 = file(params.custom_internal_data, type: 'any')
 
@@ -362,6 +364,7 @@ if(db_v.toString()!="" && db_d.toString()!="" && db_j.toString()!=""){
 
 process First_Alignment_MakeDb {
 
+publishDir params.outdir, mode: 'copy', saveAs: {filename -> if (filename =~ /.*_db-fail.tsv$/) "failed_makedb_reads_first_alignment/$filename"}
 input:
  set val(name),file(fastaFile) from g_44_fastaFile_g0_12
  set val(name_igblast),file(igblastOut) from g0_9_igblastOut0_g0_12
@@ -370,9 +373,9 @@ input:
  set val(name3), file(j_germline_file) from g_4_germlineFastaFile_g0_12
 
 output:
- set val(name_igblast),file("*_db-pass.tsv") optional true  into g0_12_outputFileTSV0_g0_43, g0_12_outputFileTSV0_g0_47, g0_12_outputFileTSV0_g0_19, g0_12_outputFileTSV0_g0_27
+ set val(name_igblast),file("*_db-pass.tsv") optional true  into g0_12_outputFileTSV0_g0_43, g0_12_outputFileTSV0_g0_47, g0_12_outputFileTSV0_g0_27, g0_12_outputFileTSV0_g0_19, g0_12_outputFileTSV0_g0_52
  set val("reference_set"), file("${reference_set}") optional true  into g0_12_germlineFastaFile1_g_68
- set val(name_igblast),file("*_db-fail.tsv") optional true  into g0_12_outputFileTSV2_g0_27
+ set val(name_igblast),file("*_db-fail.tsv") optional true  into g0_12_outputFileTSV2_g0_27, g0_12_outputFileTSV2_g0_52
 
 script:
 
@@ -428,384 +431,15 @@ if(igblastOut.getName().endsWith(".out")){
 }
 
 
-process First_Alignment_after_make_db_report {
-
-input:
- set val(name), file(makeDb_pass) from g0_12_outputFileTSV0_g0_43
- set val(name2), file(v_ref) from g_2_germlineFastaFile_g0_43
-
-output:
- file "*.rmd"  into g0_43_rMarkdown0_g0_47
-
-shell:
-
-readArray_makeDb_pass = makeDb_pass.toString().split(' ')[0]
-readArray_v_ref = v_ref.toString().split(' ')[0]
-
-'''
-#!/usr/bin/env perl
-
-
-my $script = <<'EOF';
-
-
-```{r echo=FALSE,message = FALSE}
-library(ggplot2)
-library(rlang)
-library(alakazam)
-library(dplyr)
-library(stringi)
-
-
-df <-read.delim("!{readArray_makeDb_pass}", sep="\t")
-
-df[["v_gene"]] <- getGene(df[["v_call"]], first = F, collapse = TRUE, strip_d = FALSE)
-
-df[["v_family"]] <- getFamily(df[["v_call"]], first = F, collapse = TRUE, strip_d = FALSE)
-
-df_filter <- df %>% filter(!grepl(",", v_call))
-
-
-df[,"start_v"] <- stringi::stri_locate_first(str = df[,"sequence_alignment"], regex="[ATCG]")[,1]
-df_filter[,"start_v"] <-  stringi::stri_locate_first(str = df_filter[,"sequence_alignment"], regex="[ATCG]")[,1]
-
-df[,"count_N"] <- stringi::stri_count_fixed(str = df[,"sequence_alignment"],"N")
-df_filter[,"count_N"] <- stringi::stri_count_fixed(str = df_filter[,"sequence_alignment"],"N")
-
-
-```
-
-
-
-### all reads
-
-```{r echo=FALSE,message = FALSE,warnings =FALSE,fig.width=15,fig.height=10}
-
-df[,"start_v"] <- stringi::stri_locate_first(str = df[,"sequence_alignment"], regex="[ATCG]")[,1]
-
-ggplot(df, aes(start_v)) + stat_ecdf() +
-  scale_x_continuous(breaks = seq(0, max(df[["start_v"]]), by = 10),
-                     labels = seq(0, max(df[["start_v"]]), by = 10)) +
-  scale_y_continuous(breaks = seq(0, 1, by = 0.1),
-					labels = seq(0, 1, by = 0.1)) +
-  theme(axis.text.x = element_text(size = 12),
-        axis.ticks.x = element_line(size = 2),
-        axis.ticks.y = element_line(size = 2))
-
-```
-
-
-### single assignment 
-
-```{r echo=FALSE,message = FALSE,warnings =FALSE,fig.width=15,fig.height=10}
-
-df_filter <- df %>% filter(!grepl(",", v_call))
-
-
-df_filter[,"start_v"] <-  stringi::stri_locate_first(str = df_filter[,"sequence_alignment"], regex="[ATCG]")[,1]
-
-ggplot(df_filter, aes(start_v)) + stat_ecdf()+
-  scale_x_continuous(breaks = seq(0, max(df_filter[["start_v"]]), by = 10),
-                     labels = seq(0, max(df_filter[["start_v"]]), by = 10)) +
-  scale_y_continuous(breaks = seq(0, 1, by = 0.1),
-				  	 labels = seq(0, 1, by = 0.1)) +
-  theme(axis.text.x = element_text(size = 12),
-        axis.ticks.x = element_line(size = 2))
-
-```
-
-### by gene 
-
-```{r echo=FALSE,message = FALSE,warnings =FALSE,fig.width=70,fig.height=170}
-
-ggplot(df_filter, aes(start_v, colour = as.factor(v_gene))) +
-  stat_ecdf() +
-    scale_x_continuous(breaks = seq(0, max(df_filter[["start_v"]]), by = 10),
-                labels = seq(0, max(df_filter[["start_v"]]), by = 10)) +
-  scale_y_continuous(breaks = seq(0, 1, by = 0.1),
-				  	 labels = seq(0, 1, by = 0.1)) +
-  theme(axis.text.x = element_text(size = 50),
-        axis.ticks.x = element_line(size = 2),
-        axis.text.y = element_text(size = 50),
-        axis.ticks.y = element_line(size = 2),
-        strip.text = element_text(size = 50)) +
-    facet_wrap(~ v_family, scales = "free", ncol = 1) +
-    theme(legend.position = "bottom",
-            legend.key.size  = unit(2, "cm"),
-            legend.title=element_text(size=50),
-            legend.text =element_text(size=50))
-```
-
-## V identity
-
-### all reads
-
-```{r echo=FALSE,message = FALSE,warnings =FALSE,fig.width=15,fig.height=8}
-
-# Assuming df is your data frame
-ggplot(df, aes(x = v_identity)) +
-  geom_histogram(binwidth = 0.01, 
-                 fill = "blue", color = "black", alpha = 0.7) +
-  stat_density(geom = "line", color = "red", size = 1) +
-  labs(title = "Histogram with Density Line of v_identity", x = "v_identity", y = "Frequency")
-
-```
-
-### single assignment 
-
-```{r echo=FALSE,message = FALSE,warnings =FALSE,fig.width=15,fig.height=8}
-
-# Assuming df is your data frame
-ggplot(df_filter, aes(x = v_identity)) +
-  geom_histogram(binwidth = 0.01, 
-                 fill = "blue", color = "black", alpha = 0.7) +
-  stat_density(geom = "line", color = "red", size = 1) +
-  labs(title = "Histogram with Density Line of v_identity", x = "v_identity", y = "Frequency")
-
-```
-
-
-
-## N count
-
-
-### all reads
-
-```{r echo=FALSE,message = FALSE,warnings =FALSE,fig.width=15,fig.height=10}
-max_length <- max(nchar(df[,"sequence_alignment"]))
-sequences_padded <- stri_pad_right(df[,"sequence_alignment"], width = max_length, pad = "_")
-sequence_chars <- stri_split_regex(sequences_padded, "(?!^)(?=.{1})", simplify = TRUE)
-position_counts <- colSums(sequence_chars == "N")
-
-data_df <- data.frame(Position = 1:length(position_counts), Count = position_counts)
-
-ggplot(data_df, aes(x = Position, y = Count)) +
-  geom_bar(stat = "identity", fill = "blue") +
-  labs(x = "Position in Sequence",
-       y = "Number of Sequences with N",
-       title = "Histogram of Sequences with N at Each Position")
-
-```
-
-```{r echo=FALSE,message = FALSE,warnings =FALSE,fig.width=15,fig.height=10}
-cat("hist of N_count in each seq - without 0 N", "\n")
-x<-sum(df[,"count_N"]==0)
-cat("There is ",x, " with 0 N","\n")
-
-df_filtered <- df %>%
-filter(count_N > 0)
-
-# Create the bar plot
-ggplot(df_filtered, aes(x = as.factor(count_N))) +
-geom_bar(stat = "count") +
-labs(title = "Bar Plot for Each Value", x = "Value", y = "Count")
-
-```
-
-
-### single assignment 
-
-```{r echo=FALSE,message = FALSE,warnings =FALSE,fig.width=15,fig.height=10}
-max_length <- max(nchar(df_filter[,"sequence_alignment"]))
-sequences_padded <- stri_pad_right(df_filter[,"sequence_alignment"], width = max_length, pad = "_")
-sequence_chars <- stri_split_regex(sequences_padded, "(?!^)(?=.{1})", simplify = TRUE)
-position_counts <- colSums(sequence_chars == "N")
-
-data_df <- data.frame(Position = 1:length(position_counts), Count = position_counts)
-
-ggplot(data_df, aes(x = Position, y = Count)) +
-  geom_bar(stat = "identity", fill = "blue") +
-  labs(x = "Position in sequence alignment",
-       y = "Number of Sequences with N",
-       title = "N count at Each Position of sequence alignment")
-
-
-```
-
-
-```{r echo=FALSE,message = FALSE,warnings =FALSE,fig.width=15,fig.height=10}
-cat("Histogaram of N count in each sequence alignment  - without 0 N", "\n")
-x<-sum(df_filter[,"count_N"]==0)
-cat("There is ",x, " with 0 N","\n")
-
-df_filtered <- df_filter %>%
-filter(count_N > 0)
-ggplot(df_filtered, aes(x = as.factor(count_N))) +
-geom_bar(stat = "count") +
-labs(title = "Bar Plot for Each Value", x = "Value", y = "Count")
-
-```
-
-
-## Functionality
-
-### all reads
-
-```{r echo=FALSE,message = FALSE,warnings =FALSE,fig.width=10,fig.height=7}
-
-
-library(gridExtra)
-
-df_plot <- data.frame(table(df[,"productive"]))
-colnames(df_plot) <- c("productive", "count")
-df_plot[,"percentage"] <- df_plot[,"count"] / sum(df_plot[,"count"]) * 100
-
-# Create a ggplot pie chart
-p1 <- ggplot(df_plot, aes(x = "", y = percentage, fill = productive)) +
-  geom_bar(stat = "identity", width = 1, color = "white") +
-  coord_polar(theta = "y") +
-  theme_void() +
-  ggtitle("Productive") +
-  geom_text(aes(label = sprintf("%s\n%.1f%%", productive, percentage)),
-            position = position_stack(vjust = 0.5))
-
-df_plot <- data.frame(table(nchar(df[,"sequence"])%%3 == 0))
-colnames(df_plot) <- c("productive", "count")
-df_plot[,"percentage"] <- df_plot[,"count"] / sum(df_plot[,"count"]) * 100
-
-# Create a ggplot pie chart
-p2 <- ggplot(df_plot, aes(x = "", y = percentage, fill = productive)) +
-  geom_bar(stat = "identity", width = 1, color = "white") +
-  coord_polar(theta = "y") +
-  theme_void() +
-  ggtitle("sequence length divisible by 3") +
-  geom_text(aes(label = sprintf("%s\n%.1f%%", productive, percentage)),
-            position = position_stack(vjust = 0.5))
-
-df_plot <- data.frame(table(nchar(df[,"junction"])%%3 == 0))
-colnames(df_plot) <- c("productive", "count")
-df_plot[,"percentage"] <- df_plot[,"count"] / sum(df_plot[,"count"]) * 100
-
-# Create a ggplot pie chart
-p3 <- ggplot(df_plot, aes(x = "", y = percentage, fill = productive)) +
-  geom_bar(stat = "identity", width = 1, color = "white") +
-  coord_polar(theta = "y") +
-  theme_void() +
-  ggtitle("junction length divisible by 3") +
-  geom_text(aes(label = sprintf("%s\n%.1f%%", productive, percentage)),
-            position = position_stack(vjust = 0.5))
-
-
-grid.arrange(p1, p2,p3 ,ncol = 3)
-```
-
-### single assignment 
-
-```{r echo=FALSE,message = FALSE,warnings =FALSE,fig.width=10,fig.height=7}
-
-library(gridExtra)
-
-df_plot <- data.frame(table(df_filter[,"productive"]))
-colnames(df_plot) <- c("productive", "count")
-df_plot[,"percentage"] <- df_plot[,"count"] / sum(df_plot[,"count"]) * 100
-
-# Create a ggplot pie chart
-p1 <- ggplot(df_plot, aes(x = "", y = percentage, fill = productive)) +
-  geom_bar(stat = "identity", width = 1, color = "white") +
-  coord_polar(theta = "y") +
-  theme_void() +
-  ggtitle("Productive") +
-  geom_text(aes(label = sprintf("%s\n%.1f%%", productive, percentage)),
-            position = position_stack(vjust = 0.5))
-
-df_plot <- data.frame(table(nchar(df_filter[,"sequence"])%%3 == 0))
-colnames(df_plot) <- c("productive", "count")
-df_plot[,"percentage"] <- df_plot[,"count"] / sum(df_plot[,"count"]) * 100
-
-# Create a ggplot pie chart
-p2 <- ggplot(df_plot, aes(x = "", y = percentage, fill = productive)) +
-  geom_bar(stat = "identity", width = 1, color = "white") +
-  coord_polar(theta = "y") +
-  theme_void() +
-  ggtitle("sequence length divisible by 3") +
-  geom_text(aes(label = sprintf("%s\n%.1f%%", productive, percentage)),
-            position = position_stack(vjust = 0.5))
-
-df_plot <- data.frame(table(nchar(df_filter[,"junction"])%%3 == 0))
-colnames(df_plot) <- c("productive", "count")
-df_plot[,"percentage"] <- df_plot[,"count"] / sum(df_plot[,"count"]) * 100
-
-# Create a ggplot pie chart
-p3 <- ggplot(df_plot, aes(x = "", y = percentage, fill = productive)) +
-  geom_bar(stat = "identity", width = 1, color = "white") +
-  coord_polar(theta = "y") +
-  theme_void() +
-  ggtitle("junction length divisible by 3") +
-  geom_text(aes(label = sprintf("%s\n%.1f%%", productive, percentage)),
-            position = position_stack(vjust = 0.5))
-
-
-grid.arrange(p1, p2,p3 ,ncol=3)
-```
-
-## Percentage of alleles for each gene
-
-```{r echo=FALSE,message = FALSE,warnings =FALSE,fig.width=35,fig.height=150}
-df_filter %>%
-  filter(!grepl(",", v_call)) %>%
-  group_by(v_gene) %>%
-  mutate(n_read = n()) %>%
-  group_by(v_gene, v_call) %>%
-  summarise(n_read=n_read,n_calls = n()) %>%
-  distinct(v_gene, v_call, .keep_all = TRUE) %>%
-  summarise(n_read=n_read,n_calls = n_calls, p_calls = n_calls / n_read * 100) %>%
-  arrange(v_gene, desc(p_calls)) %>%
-  ggplot(aes(x = reorder(v_call, p_calls), y = p_calls)) + # Modified aes() function
-  geom_col() + 
-  theme_bw() +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 0.5,size = 15),
-        axis.ticks.x = element_line(size = 2),
-        axis.text.y = element_text(size = 20),
-        axis.ticks.y = element_line(size = 2),
-        strip.text = element_text(size = 20))+
-  facet_wrap(.~v_gene, ncol = 4, scales = "free")
-  
-```
-
-EOF
-	
-open OUT, ">after_make_db_report_!{name}.rmd";
-print OUT $script;
-close OUT;
-
-'''
-
-}
-
-
-process First_Alignment_render_after_make_db_report {
-
-publishDir params.outdir, mode: 'copy', saveAs: {filename -> if (filename =~ /.*.html$/) "first_alignment_reports/$filename"}
-publishDir params.outdir, mode: 'copy', saveAs: {filename -> if (filename =~ /.*.html$/) "first_alignment_reports/$filename"}
-input:
- file rmk from g0_43_rMarkdown0_g0_47
- set val(name4), file(v_ref) from g_2_germlineFastaFile_g0_47
- set val(name), file(makeDb_pass) from g0_12_outputFileTSV0_g0_47
-
-output:
- file "*.html"  into g0_47_outputFileHTML00
- file "*csv" optional true  into g0_47_csvFile11
-
-"""
-
-#!/usr/bin/env Rscript 
-
-rmarkdown::render("${rmk}", clean=TRUE, output_format="html_document", output_dir=".")
-
-"""
-}
-
-
 process First_Alignment_Collapse_AIRRseq {
 
 publishDir params.outdir, mode: 'copy', saveAs: {filename -> if (filename =~ /${outfile}+passed.tsv$/) "rearrangements/$filename"}
-publishDir params.outdir, mode: 'copy', saveAs: {filename -> if (filename =~ /${outfile}+failed.*$/) "failed_makedb_reads_first_alignment/$filename"}
 input:
  set val(name),file(airrFile) from g0_12_outputFileTSV0_g0_19
 
 output:
- set val(name), file("${outfile}"+"passed.tsv") optional true  into g0_19_outputFileTSV0_g0_27, g0_19_outputFileTSV0_g_68, g0_19_outputFileTSV0_g_8, g0_19_outputFileTSV0_g_80
- set val(name), file("${outfile}"+"failed*") optional true  into g0_19_outputFileTSV1_g0_27
+ set val(name), file("${outfile}"+"passed.tsv") optional true  into g0_19_outputFileTSV0_g0_27, g0_19_outputFileTSV0_g0_52, g0_19_outputFileTSV0_g_8, g0_19_outputFileTSV0_g_68, g0_19_outputFileTSV0_g_80
+ set val(name), file("${outfile}"+"failed*") optional true  into g0_19_outputFileTSV1_g0_27, g0_19_outputFileTSV1_g0_52
 
 script:
 conscount_min = params.First_Alignment_Collapse_AIRRseq.conscount_min
@@ -1003,7 +637,7 @@ if(airrFile.getName().endsWith(".tsv")){
 	df2 = df2.drop('sequence_vdj', axis=1)
 	
 	collapse_n = str(df[df.columns[0]].count()-df2[df2.columns[0]].count())
-	
+
 	# removing sequences without J assignment and non functional
 	nrow_i = df2[df2.columns[0]].count()
 	cond = (~df2['j_call'].str.contains('J')|df2['productive'].isin(['F','FALSE','False']))
@@ -1030,10 +664,9 @@ if(airrFile.getName().endsWith(".tsv")){
 	cons_n = str(nrow_i-df2[df2.columns[0]].count())
 	nrow_i = df2[df2.columns[0]].count()    
 	
-	df2.to_csv('${outfile}'+'passed.tsv', sep = '\t',index=False)
+	df2.to_csv('${outfile}'+'passed.tsv', sep = '\t',index=False) #, compression='gzip'
 	
-	df_cons_low.to_csv('${outfile}'+'failed_conscount.tsv', sep = '\t',index=False)
-	df_non.to_csv('${outfile}'+'failed_functional.tsv', sep = '\t',index=False)
+	pd.concat([df_cons_low,df_non]).to_csv('${outfile}'+'failed.tsv', sep = '\t',index=False)
 	
 	print(str(low_n)+' Sequences had N count over 10')
 	print(str(dup_n)+' Sequences had a duplicated sequnece id')
@@ -1048,6 +681,61 @@ if(airrFile.getName().endsWith(".tsv")){
 	
 	"""
 }
+
+}
+
+
+process ogrdbstats_report_first_alignment {
+
+publishDir params.outdir, mode: 'copy', saveAs: {filename -> if (filename =~ /.*pdf$/) "ogrdbstats_first_alignment/$filename"}
+publishDir params.outdir, mode: 'copy', saveAs: {filename -> if (filename =~ /.*csv$/) "ogrdbstats_first_alignment/$filename"}
+input:
+ set val(name),file(airrFile) from g0_19_outputFileTSV0_g_68
+ set val(name1), file(germline_file) from g0_12_germlineFastaFile1_g_68
+ set val(name2), file(v_germline_file) from g_2_germlineFastaFile_g_68
+
+output:
+ file "*pdf"  into g_68_outputFilePdf00
+ file "*csv"  into g_68_outputFileCSV11
+
+script:
+
+// general params
+chain = params.ogrdbstats_report_first_alignment.chain
+outname = airrFile.name.toString().substring(0, airrFile.name.toString().indexOf("_db-pass"))
+
+"""
+
+novel=""
+
+if grep -q "_[A-Z][0-9]" ${v_germline_file}; then
+	grep -A 6 "_[A-Z][0-9]" ${v_germline_file} > novel_sequences.fasta
+	novel=\$(realpath novel_sequences.fasta)
+	novel="--inf_file \$novel"
+fi
+
+IFS='\t' read -a var < ${airrFile}
+
+airrfile=${airrFile}
+
+if [[ ! "\${var[*]}" =~ "v_call_genotyped" ]]; then
+    awk -F'\t' '{col=\$5;gsub("call", "call_genotyped", col); print \$0 "\t" col}' ${airrFile} > ${outname}_genotyped.tsv
+    airrfile=${outname}_genotyped.tsv
+fi
+
+germline_file_path=\$(realpath ${germline_file})
+
+airrFile_path=\$(realpath \$airrfile)
+
+
+run_ogrdbstats \
+	\$germline_file_path \
+	"Homosapiens" \
+	\$airrFile_path \
+	${chain} \
+	\$novel 
+
+"""
 
 }
 
@@ -1351,6 +1039,188 @@ make_igblast_ndm ${germlineFile} ${chain} ${ndm_file}
 }
 
 
+process First_Alignment_alignment_report_table {
+
+publishDir params.outdir, mode: 'copy', saveAs: {filename -> if (filename =~ /.*.tsv.gz$/) "report_tables/$filename"}
+input:
+ set val(name),file(collapse_pass) from g0_19_outputFileTSV0_g0_52
+ set val(name1),file(collapse_fail) from g0_19_outputFileTSV1_g0_52
+ set val(name2),file(makedb_fail) from g0_12_outputFileTSV2_g0_52
+ set val(name3),file(makedb_pass) from g0_12_outputFileTSV0_g0_52
+
+output:
+ file "*.tsv.gz"  into g0_52_outputFileTSV00
+
+script:
+name_alignment = params.First_Alignment_alignment_report_table.name_alignment
+
+outname = name+'_'+name_alignment
+
+
+collapse_pass = collapse_pass.toString().split(' ')[0]
+collapse_fail = collapse_fail.toString().split(' ')[0]
+makedb_fail = makedb_fail.toString().split(' ')[0]
+makedb_pass = makedb_pass.toString().split(' ')[0]
+
+"""
+#!/usr/bin/env Rscript
+
+## functions
+
+write_file <- function(x, file){
+	data.table::fwrite(
+	x = x,
+	file = file,
+	sep = "\t",
+	compress = "auto"
+	)	
+}
+
+##
+
+sample_name <- "${name}"
+db_collapse_pass <- data.table::fread("${collapse_pass}")
+db_collapse_fail <- data.table::fread("${collapse_fail}")
+db_makedb_fail <- data.table::fread("${makedb_fail}")
+db_makedb_pass <- data.table::fread("${makedb_pass}")
+
+## add status columns
+
+db_collapse_pass[['collapse_pass']] <- TRUE
+db_collapse_pass[['igblast_pass']] <- TRUE
+
+db_collapse_fail[['collapse_pass']] <- FALSE
+db_collapse_fail[['igblast_pass']] <- TRUE
+
+db_makedb_fail[['collapse_pass']] <- FALSE
+db_makedb_fail[['igblast_pass']] <- FALSE
+
+db_makedb_pass[['collapse_pass']] <- FALSE
+db_makedb_pass[['igblast_pass']] <- TRUE
+
+
+######### absolute numbers #########
+
+igblast_pass <- nrow(db_makedb_pass)
+igblast_pass_productive <- sum(db_makedb_pass[['productive']]==TRUE)
+igblast_fail <- nrow(db_makedb_fail)
+
+collapse_pass <- nrow(db_collapse_pass)
+collase_fail <- nrow(db_collapse_fail)
+
+db_collapse_pass[['v_gene']] <- alakazam::getGene(db_collapse_pass[['v_call']], first=FALSE)
+
+ma_collapse_pass <- sum(grepl(",", db_collapse_pass[['v_gene']]))
+
+tab <- data.frame(sample = sample_name, 
+				category = c(
+					'Igblast passed reads',
+					'Igblast failed reads',
+					'Igblast passed productive reads',
+					'Collapsed passed reads',
+					'Collapsed failed reads',
+					'Collapsed passed productive reads',
+					'Multiple ASC assignments'
+					),
+				values = c(
+					igblast_pass,
+					igblast_fail,
+					igblast_pass_productive,
+					collapse_pass,
+					collase_fail,
+					collapse_pass,
+					ma_collapse_pass
+					)
+)
+
+write_file(
+	x = tab,
+	file = paste0("${outname}","_absolute_numbers.tsv.gz")
+)
+
+
+remove(igblast_fail)
+
+####################################
+
+############# V start #############
+
+v_start_align_makedb <- as.data.frame(stringi::stri_locate_first(db_makedb_pass[['sequence_alignment']], regex = "[ATCG]"))
+v_start_align_makedb[['Stage']] <- 'IgBlast'
+v_start_align_makedb[['sample']] <- sample_name
+
+v_start_align_collapse <- as.data.frame(stringi::stri_locate_first(db_collapse_pass[['sequence_alignment']], regex = "[ATCG]"))
+v_start_align_collapse[['Stage']] <- 'Collapse'
+v_start_align_collapse[['sample']] <- sample_name
+
+v_start_align <- rbind(v_start_align_makedb, v_start_align_collapse)
+
+write_file(
+	x = v_start_align,
+	file = paste0("${outname}","_v_start.tsv.gz")
+)
+
+#######################################
+
+############# UTR5 length #############
+
+utr5_size_seq_makedb <- data.frame(
+						utr5_length = db_makedb_pass[['v_sequence_start']]-1, 
+						Stage = 'IgBlast', 
+						sample = sample_name, stringsAsFactors = FALSE)
+
+utr5_size_seq_collapse <- data.frame(
+						utr5_length = db_collapse_pass[['v_sequence_start']]-1, 
+						Stage = 'Collapse', 
+						sample = sample_name, stringsAsFactors = FALSE)
+
+utr5_size_seq <- rbind(utr5_size_seq_makedb, utr5_size_seq_collapse)
+
+write_file(
+	x = utr5_size_seq,
+	file = paste0("${outname}","_utr5_length.tsv.gz")
+)
+
+#######################################
+
+########### Collapse thresh #############
+
+# productive based on duplicate/consensus threshold
+
+col_thresh <- if('consensus_count' %in% names(db_collapse_pass)) 'consensus_count' else 'duplicate_count'
+
+thresh_val <- min(db_collapse_pass[[col_thresh]])
+
+thresh_seq <- 0:100
+
+thresh_values <- data.table::rbindlist(lapply(thresh_seq, function(t){
+	collapse_pass_prod_true_above_thresh <- sum(db_collapse_pass[[col_thresh]]>=t)
+	collapse_fail_prod_true_above_thresh <- sum(db_collapse_fail[[col_thresh]]>=t && db_collapse_fail[['productive']]==TRUE)
+	collapse_fail_prod_all_above_thresh <- sum(db_collapse_fail[[col_thresh]]>=t)
+	
+	data.frame(
+	Stage = 'Collapse',
+	sample = sample_name,
+	thresh_col = col_thresh,
+	thresh_val = t, 
+	productive_pass = collapse_pass_prod_true_above_thresh + collapse_fail_prod_true_above_thresh, 
+	above_threshold = collapse_fail_prod_all_above_thresh, stringsAsFactors = FALSE)
+}))
+
+write_file(
+	x = thresh_values,
+	file = paste0("${outname}","_collapse_thresh.tsv.gz")
+)
+
+#######################################
+
+
+"""
+
+
+}
+
+
 process airrseq_to_fasta {
 
 input:
@@ -1366,7 +1236,7 @@ outfile = name+"_collapsed_seq.fasta"
 """
 #!/usr/bin/env Rscript
 
-data <- read.delim("${airrseq_data}")
+data <- data.table::fread("${airrseq_data}", stringsAsFactors = F, data.table = F)
 
 data_columns <- names(data)
 
@@ -2135,6 +2005,7 @@ g_4_germlineFastaFile_g14_1= g_4_germlineFastaFile_g14_1.ifEmpty([""])
 
 process Clone_AIRRseq_Second_CreateGermlines {
 
+publishDir params.outdir, mode: 'copy', saveAs: {filename -> if (filename =~ /.*_germ-pass.tsv$/) "rearrangements/$filename"}
 input:
  set val(name),file(airrFile) from g14_2_outputFileTSV0_g14_1
  set val(name1), file(v_germline_file) from g_70_germlineFastaFile0_g14_1
@@ -3431,61 +3302,6 @@ write.table(genos, file = paste0("${outname}","_genotype.tsv"), row.names = F, s
 """
 }
 
-
-process ogrdbstats_report_first_alignment {
-
-publishDir params.outdir, mode: 'copy', saveAs: {filename -> if (filename =~ /.*pdf$/) "ogrdbstats_first_alignment/$filename"}
-publishDir params.outdir, mode: 'copy', saveAs: {filename -> if (filename =~ /.*csv$/) "ogrdbstats_first_alignment/$filename"}
-input:
- set val(name),file(airrFile) from g0_19_outputFileTSV0_g_68
- set val(name1), file(germline_file) from g0_12_germlineFastaFile1_g_68
- set val(name2), file(v_germline_file) from g_2_germlineFastaFile_g_68
-
-output:
- file "*pdf"  into g_68_outputFilePdf00
- file "*csv"  into g_68_outputFileCSV11
-
-script:
-
-// general params
-chain = params.ogrdbstats_report_first_alignment.chain
-outname = airrFile.name.toString().substring(0, airrFile.name.toString().indexOf("_db-pass"))
-
-"""
-
-novel=""
-
-if grep -q "_[A-Z][0-9]" ${v_germline_file}; then
-	grep -A 6 "_[A-Z][0-9]" ${v_germline_file} > novel_sequences.fasta
-	novel=\$(realpath novel_sequences.fasta)
-	novel="--inf_file \$novel"
-fi
-
-IFS='\t' read -a var < ${airrFile}
-
-airrfile=${airrFile}
-
-if [[ ! "\${var[*]}" =~ "v_call_genotyped" ]]; then
-    awk -F'\t' '{col=\$5;gsub("call", "call_genotyped", col); print \$0 "\t" col}' ${airrFile} > ${outname}_genotyped.tsv
-    airrfile=${outname}_genotyped.tsv
-fi
-
-germline_file_path=\$(realpath ${germline_file})
-
-airrFile_path=\$(realpath \$airrfile)
-
-
-run_ogrdbstats \
-	\$germline_file_path \
-	"Homosapiens" \
-	\$airrFile_path \
-	${chain} \
-	\$novel 
-
-"""
-
-}
-
 g0_12_outputFileTSV2_g0_27= g0_12_outputFileTSV2_g0_27.ifEmpty([""]) 
 g0_19_outputFileTSV1_g0_27= g0_19_outputFileTSV1_g0_27.ifEmpty([""]) 
 
@@ -3607,6 +3423,374 @@ count_df <- inner_join(pass_df, fail_df, by=c("step", "task")) %>%
 df<-count_df[,c("task", "pass", "fail")]
 
 write.csv(df,"pipeline_statistics.csv") 
+
+"""
+}
+
+
+process First_Alignment_after_make_db_report {
+
+input:
+ set val(name), file(makeDb_pass) from g0_12_outputFileTSV0_g0_43
+ set val(name2), file(v_ref) from g_2_germlineFastaFile_g0_43
+
+output:
+ file "*.rmd"  into g0_43_rMarkdown0_g0_47
+
+shell:
+
+readArray_makeDb_pass = makeDb_pass.toString().split(' ')[0]
+readArray_v_ref = v_ref.toString().split(' ')[0]
+
+'''
+#!/usr/bin/env perl
+
+
+my $script = <<'EOF';
+
+
+```{r echo=FALSE,message = FALSE}
+library(ggplot2)
+library(rlang)
+library(alakazam)
+library(dplyr)
+library(stringi)
+
+
+df <-read.delim("!{readArray_makeDb_pass}", sep="\t")
+
+df[["v_gene"]] <- getGene(df[["v_call"]], first = F, collapse = TRUE, strip_d = FALSE)
+
+df[["v_family"]] <- getFamily(df[["v_call"]], first = F, collapse = TRUE, strip_d = FALSE)
+
+df_filter <- df %>% filter(!grepl(",", v_call))
+
+
+df[,"start_v"] <- stringi::stri_locate_first(str = df[,"sequence_alignment"], regex="[ATCG]")[,1]
+df_filter[,"start_v"] <-  stringi::stri_locate_first(str = df_filter[,"sequence_alignment"], regex="[ATCG]")[,1]
+
+df[,"count_N"] <- stringi::stri_count_fixed(str = df[,"sequence_alignment"],"N")
+df_filter[,"count_N"] <- stringi::stri_count_fixed(str = df_filter[,"sequence_alignment"],"N")
+
+
+```
+
+
+
+### all reads
+
+```{r echo=FALSE,message = FALSE,warnings =FALSE,fig.width=15,fig.height=10}
+
+df[,"start_v"] <- stringi::stri_locate_first(str = df[,"sequence_alignment"], regex="[ATCG]")[,1]
+
+ggplot(df, aes(start_v)) + stat_ecdf() +
+  scale_x_continuous(breaks = seq(0, max(df[["start_v"]]), by = 10),
+                     labels = seq(0, max(df[["start_v"]]), by = 10)) +
+  scale_y_continuous(breaks = seq(0, 1, by = 0.1),
+					labels = seq(0, 1, by = 0.1)) +
+  theme(axis.text.x = element_text(size = 12),
+        axis.ticks.x = element_line(size = 2),
+        axis.ticks.y = element_line(size = 2))
+
+```
+
+
+### single assignment 
+
+```{r echo=FALSE,message = FALSE,warnings =FALSE,fig.width=15,fig.height=10}
+
+df_filter <- df %>% filter(!grepl(",", v_call))
+
+
+df_filter[,"start_v"] <-  stringi::stri_locate_first(str = df_filter[,"sequence_alignment"], regex="[ATCG]")[,1]
+
+ggplot(df_filter, aes(start_v)) + stat_ecdf()+
+  scale_x_continuous(breaks = seq(0, max(df_filter[["start_v"]]), by = 10),
+                     labels = seq(0, max(df_filter[["start_v"]]), by = 10)) +
+  scale_y_continuous(breaks = seq(0, 1, by = 0.1),
+				  	 labels = seq(0, 1, by = 0.1)) +
+  theme(axis.text.x = element_text(size = 12),
+        axis.ticks.x = element_line(size = 2))
+
+```
+
+### by gene 
+
+```{r echo=FALSE,message = FALSE,warnings =FALSE,fig.width=70,fig.height=170}
+
+ggplot(df_filter, aes(start_v, colour = as.factor(v_gene))) +
+  stat_ecdf() +
+    scale_x_continuous(breaks = seq(0, max(df_filter[["start_v"]]), by = 10),
+                labels = seq(0, max(df_filter[["start_v"]]), by = 10)) +
+  scale_y_continuous(breaks = seq(0, 1, by = 0.1),
+				  	 labels = seq(0, 1, by = 0.1)) +
+  theme(axis.text.x = element_text(size = 50),
+        axis.ticks.x = element_line(size = 2),
+        axis.text.y = element_text(size = 50),
+        axis.ticks.y = element_line(size = 2),
+        strip.text = element_text(size = 50)) +
+    facet_wrap(~ v_family, scales = "free", ncol = 1) +
+    theme(legend.position = "bottom",
+            legend.key.size  = unit(2, "cm"),
+            legend.title=element_text(size=50),
+            legend.text =element_text(size=50))
+```
+
+## V identity
+
+### all reads
+
+```{r echo=FALSE,message = FALSE,warnings =FALSE,fig.width=15,fig.height=8}
+
+# Assuming df is your data frame
+ggplot(df, aes(x = v_identity)) +
+  geom_histogram(binwidth = 0.01, 
+                 fill = "blue", color = "black", alpha = 0.7) +
+  stat_density(geom = "line", color = "red", size = 1) +
+  labs(title = "Histogram with Density Line of v_identity", x = "v_identity", y = "Frequency")
+
+```
+
+### single assignment 
+
+```{r echo=FALSE,message = FALSE,warnings =FALSE,fig.width=15,fig.height=8}
+
+# Assuming df is your data frame
+ggplot(df_filter, aes(x = v_identity)) +
+  geom_histogram(binwidth = 0.01, 
+                 fill = "blue", color = "black", alpha = 0.7) +
+  stat_density(geom = "line", color = "red", size = 1) +
+  labs(title = "Histogram with Density Line of v_identity", x = "v_identity", y = "Frequency")
+
+```
+
+
+
+## N count
+
+
+### all reads
+
+```{r echo=FALSE,message = FALSE,warnings =FALSE,fig.width=15,fig.height=10}
+max_length <- max(nchar(df[,"sequence_alignment"]))
+sequences_padded <- stri_pad_right(df[,"sequence_alignment"], width = max_length, pad = "_")
+sequence_chars <- stri_split_regex(sequences_padded, "(?!^)(?=.{1})", simplify = TRUE)
+position_counts <- colSums(sequence_chars == "N")
+
+data_df <- data.frame(Position = 1:length(position_counts), Count = position_counts)
+
+ggplot(data_df, aes(x = Position, y = Count)) +
+  geom_bar(stat = "identity", fill = "blue") +
+  labs(x = "Position in Sequence",
+       y = "Number of Sequences with N",
+       title = "Histogram of Sequences with N at Each Position")
+
+```
+
+```{r echo=FALSE,message = FALSE,warnings =FALSE,fig.width=15,fig.height=10}
+cat("hist of N_count in each seq - without 0 N", "\n")
+x<-sum(df[,"count_N"]==0)
+cat("There is ",x, " with 0 N","\n")
+
+df_filtered <- df %>%
+filter(count_N > 0)
+
+# Create the bar plot
+ggplot(df_filtered, aes(x = as.factor(count_N))) +
+geom_bar(stat = "count") +
+labs(title = "Bar Plot for Each Value", x = "Value", y = "Count")
+
+```
+
+
+### single assignment 
+
+```{r echo=FALSE,message = FALSE,warnings =FALSE,fig.width=15,fig.height=10}
+max_length <- max(nchar(df_filter[,"sequence_alignment"]))
+sequences_padded <- stri_pad_right(df_filter[,"sequence_alignment"], width = max_length, pad = "_")
+sequence_chars <- stri_split_regex(sequences_padded, "(?!^)(?=.{1})", simplify = TRUE)
+position_counts <- colSums(sequence_chars == "N")
+
+data_df <- data.frame(Position = 1:length(position_counts), Count = position_counts)
+
+ggplot(data_df, aes(x = Position, y = Count)) +
+  geom_bar(stat = "identity", fill = "blue") +
+  labs(x = "Position in sequence alignment",
+       y = "Number of Sequences with N",
+       title = "N count at Each Position of sequence alignment")
+
+
+```
+
+
+```{r echo=FALSE,message = FALSE,warnings =FALSE,fig.width=15,fig.height=10}
+cat("Histogaram of N count in each sequence alignment  - without 0 N", "\n")
+x<-sum(df_filter[,"count_N"]==0)
+cat("There is ",x, " with 0 N","\n")
+
+df_filtered <- df_filter %>%
+filter(count_N > 0)
+ggplot(df_filtered, aes(x = as.factor(count_N))) +
+geom_bar(stat = "count") +
+labs(title = "Bar Plot for Each Value", x = "Value", y = "Count")
+
+```
+
+
+## Functionality
+
+### all reads
+
+```{r echo=FALSE,message = FALSE,warnings =FALSE,fig.width=10,fig.height=7}
+
+
+library(gridExtra)
+
+df_plot <- data.frame(table(df[,"productive"]))
+colnames(df_plot) <- c("productive", "count")
+df_plot[,"percentage"] <- df_plot[,"count"] / sum(df_plot[,"count"]) * 100
+
+# Create a ggplot pie chart
+p1 <- ggplot(df_plot, aes(x = "", y = percentage, fill = productive)) +
+  geom_bar(stat = "identity", width = 1, color = "white") +
+  coord_polar(theta = "y") +
+  theme_void() +
+  ggtitle("Productive") +
+  geom_text(aes(label = sprintf("%s\n%.1f%%", productive, percentage)),
+            position = position_stack(vjust = 0.5))
+
+df_plot <- data.frame(table(nchar(df[,"sequence"])%%3 == 0))
+colnames(df_plot) <- c("productive", "count")
+df_plot[,"percentage"] <- df_plot[,"count"] / sum(df_plot[,"count"]) * 100
+
+# Create a ggplot pie chart
+p2 <- ggplot(df_plot, aes(x = "", y = percentage, fill = productive)) +
+  geom_bar(stat = "identity", width = 1, color = "white") +
+  coord_polar(theta = "y") +
+  theme_void() +
+  ggtitle("sequence length divisible by 3") +
+  geom_text(aes(label = sprintf("%s\n%.1f%%", productive, percentage)),
+            position = position_stack(vjust = 0.5))
+
+df_plot <- data.frame(table(nchar(df[,"junction"])%%3 == 0))
+colnames(df_plot) <- c("productive", "count")
+df_plot[,"percentage"] <- df_plot[,"count"] / sum(df_plot[,"count"]) * 100
+
+# Create a ggplot pie chart
+p3 <- ggplot(df_plot, aes(x = "", y = percentage, fill = productive)) +
+  geom_bar(stat = "identity", width = 1, color = "white") +
+  coord_polar(theta = "y") +
+  theme_void() +
+  ggtitle("junction length divisible by 3") +
+  geom_text(aes(label = sprintf("%s\n%.1f%%", productive, percentage)),
+            position = position_stack(vjust = 0.5))
+
+
+grid.arrange(p1, p2,p3 ,ncol = 3)
+```
+
+### single assignment 
+
+```{r echo=FALSE,message = FALSE,warnings =FALSE,fig.width=10,fig.height=7}
+
+library(gridExtra)
+
+df_plot <- data.frame(table(df_filter[,"productive"]))
+colnames(df_plot) <- c("productive", "count")
+df_plot[,"percentage"] <- df_plot[,"count"] / sum(df_plot[,"count"]) * 100
+
+# Create a ggplot pie chart
+p1 <- ggplot(df_plot, aes(x = "", y = percentage, fill = productive)) +
+  geom_bar(stat = "identity", width = 1, color = "white") +
+  coord_polar(theta = "y") +
+  theme_void() +
+  ggtitle("Productive") +
+  geom_text(aes(label = sprintf("%s\n%.1f%%", productive, percentage)),
+            position = position_stack(vjust = 0.5))
+
+df_plot <- data.frame(table(nchar(df_filter[,"sequence"])%%3 == 0))
+colnames(df_plot) <- c("productive", "count")
+df_plot[,"percentage"] <- df_plot[,"count"] / sum(df_plot[,"count"]) * 100
+
+# Create a ggplot pie chart
+p2 <- ggplot(df_plot, aes(x = "", y = percentage, fill = productive)) +
+  geom_bar(stat = "identity", width = 1, color = "white") +
+  coord_polar(theta = "y") +
+  theme_void() +
+  ggtitle("sequence length divisible by 3") +
+  geom_text(aes(label = sprintf("%s\n%.1f%%", productive, percentage)),
+            position = position_stack(vjust = 0.5))
+
+df_plot <- data.frame(table(nchar(df_filter[,"junction"])%%3 == 0))
+colnames(df_plot) <- c("productive", "count")
+df_plot[,"percentage"] <- df_plot[,"count"] / sum(df_plot[,"count"]) * 100
+
+# Create a ggplot pie chart
+p3 <- ggplot(df_plot, aes(x = "", y = percentage, fill = productive)) +
+  geom_bar(stat = "identity", width = 1, color = "white") +
+  coord_polar(theta = "y") +
+  theme_void() +
+  ggtitle("junction length divisible by 3") +
+  geom_text(aes(label = sprintf("%s\n%.1f%%", productive, percentage)),
+            position = position_stack(vjust = 0.5))
+
+
+grid.arrange(p1, p2,p3 ,ncol=3)
+```
+
+## Percentage of alleles for each gene
+
+```{r echo=FALSE,message = FALSE,warnings =FALSE,fig.width=35,fig.height=150}
+df_filter %>%
+  filter(!grepl(",", v_call)) %>%
+  group_by(v_gene) %>%
+  mutate(n_read = n()) %>%
+  group_by(v_gene, v_call) %>%
+  summarise(n_read=n_read,n_calls = n()) %>%
+  distinct(v_gene, v_call, .keep_all = TRUE) %>%
+  summarise(n_read=n_read,n_calls = n_calls, p_calls = n_calls / n_read * 100) %>%
+  arrange(v_gene, desc(p_calls)) %>%
+  ggplot(aes(x = reorder(v_call, p_calls), y = p_calls)) + # Modified aes() function
+  geom_col() + 
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 0.5,size = 15),
+        axis.ticks.x = element_line(size = 2),
+        axis.text.y = element_text(size = 20),
+        axis.ticks.y = element_line(size = 2),
+        strip.text = element_text(size = 20))+
+  facet_wrap(.~v_gene, ncol = 4, scales = "free")
+  
+```
+
+EOF
+	
+open OUT, ">after_make_db_report_!{name}.rmd";
+print OUT $script;
+close OUT;
+
+'''
+
+}
+
+
+process First_Alignment_render_after_make_db_report {
+
+publishDir params.outdir, mode: 'copy', saveAs: {filename -> if (filename =~ /.*.html$/) "first_alignment_reports/$filename"}
+publishDir params.outdir, mode: 'copy', saveAs: {filename -> if (filename =~ /.*.html$/) "first_alignment_reports/$filename"}
+input:
+ file rmk from g0_43_rMarkdown0_g0_47
+ set val(name4), file(v_ref) from g_2_germlineFastaFile_g0_47
+ set val(name), file(makeDb_pass) from g0_12_outputFileTSV0_g0_47
+
+output:
+ file "*.html"  into g0_47_outputFileHTML00
+ file "*csv" optional true  into g0_47_csvFile11
+
+"""
+
+#!/usr/bin/env Rscript 
+
+rmarkdown::render("${rmk}", clean=TRUE, output_format="html_document", output_dir=".")
 
 """
 }
