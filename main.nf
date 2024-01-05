@@ -3268,7 +3268,8 @@ genoJ <-
   )
   
 # for the d_calls; first check if the genotype file for d exists
-if("${d_genotype}"!=""){
+# if("${d_genotype}"=="*tsv")
+if (endsWith("${d_genotype}", ".tsv")){
 	# for the d_calls
 	print("d_call_fractions")
 	tab_freq_d <- getFreq(data_genotyped, call = "d_call")
@@ -3296,6 +3297,32 @@ genos[["freq_by_clone"]] <- gsub("NA", "0", genos[["freq_by_clone"]])
 genos[["freq_by_seq"]] <- gsub("NA", "0", genos[["freq_by_seq"]])
 
 ## add deletion information.
+
+# if("${deletion_run}"=="*tsv"){
+if (endsWith("${deletion_run}", ".tsv")){
+	print("deletion_information")
+	binom_del <- fread("${deletion_run}", data.table = FALSE)
+	genos_names <- names(genos)
+	
+	deleted_genes <- binom_del[["gene"]][grep("^Deletion", binom_del[["deletion"]])]
+	
+	for (g in deleted_genes) {
+		if (g %in% genos[["gene"]]) {
+			# if gene is in the genotype then change to deleted
+			if("k_diff" %in% genos_names) genos[genos[["gene"]] == g, "k_diff"] <- "1000"
+			genos[genos[["gene"]] == g, "genotyped_alleles"] <- "Deletion"
+		} else{
+			# if gene is not in the genotype then add the gene as deleted
+			tmp <- as.data.frame(t(setNames(rep(NA,length(genos_names)), genos_names)), stringsAsFactors = FALSE)
+			tmp[["gene"]] <- g
+			tmp[["genotyped_alleles"]] <- "Deletion"
+			if("k_diff" %in% genos_names){
+				tmp[["k_diff"]] <- "1000"
+			}
+		  genos <- plyr::rbind.fill(genos, tmp)
+		}
+	}
+}
 
 # write the report
 write.table(genos, file = paste0("${outname}","_genotype.tsv"), row.names = F, sep = "\t")
