@@ -1,17 +1,17 @@
-# VDJbase IGH repertoire annotation and downstream analysis
+# VDJbase repertoire annotation and downstream analysis
 
 
-The pipeline performs anotation and downstrean analysis of human IGH repertoire sequences.
+The pipeline performs anotation and downstrean analysis of AIRR-seq.
 
 The pipeline can be devided into seven main componenet:
 
 **1. Initial repertoire alignment and annotation based reference set**
 
-> In this section, the repertoire sequences are annotated using IgBlast and MakeDb (presto) against the supplied reference set.
+> In this section, the repertoire sequences are annotated using IgBlast and MakeDb (presto) against the supplied reference set and collapse tham.
 
 **2. Undocumented allele inference**
 
-> In this section, inference for undocumented IGHV allele (not found in the initial reference set) is performed using TIgGER.
+> In this section, inference for undocumented V allele (not found in the initial reference set) is performed using TIgGER.
 
 **3. Second repertoire alignment and annotation with the discovered undocumented alleles.**
 
@@ -23,28 +23,34 @@ The pipeline can be devided into seven main componenet:
 
 **5. Genotype inference**
 
-> In this section, genotypes are inferred for each of the IGH calls: V, D, and J using TIgGER Bayesian inferernce tool, and a personal reference set is created.
+> In this section, genotypes are inferred for each of the IG calls: V, D, and J using TIgGER Bayesian inferernce tool, and a personal reference set is created.
 
 **6. Third repertoire alignment and annotation with the personal reference set.**
 
 > In this section, the repertoire sequences are annotated using IgBlast and MakeDb (presto) against the personal reference set from step 5.
 
-**7. Haplotype inference and OGRDB statistics.**
+**7. OGRDB statistics.**
 
-> In this section, haplotypes are inferred using RAbHIT in case the repertoire is heterozygous to IGHJ6, and the reperotire statistics are deduced using ogrdbstats.
+> the reperotire statistics are deduced using ogrdbstats.
 
 
 ### Input files:
 
-1. An IGH repertoire in fasta format.
-2. Reference set files for IGHV, IGHD, and IGHJ alleles in fasta format.
+1. An AIRR-seq in fasta format.
+2. heavy_chain (yes/no)
+3. chain - (IGHV/IGLV/IGKV)
+4. Reference set files for IG*V, IG*D, and IG*J alleles in fasta format for the right chain.
+5. auxiliary_data and custom_internal_data for the right chain.
 
 ### Output:
 
 1. The aligned repertoire with the personal reference set.
-2. A genotype report
-3. A haplotype report
-4. An ogrdb statistics report
+2. The aligned repertoire with the init reference set.
+3. A genotype reports
+4. A log files
+5. An ogrdb statistics report for the init aligned repertoire
+6. An ogrdb statistics report for the final aligned repertoire
+7. pipeline_statistic.csv - table of pass and fail reads for some of the steps.
 
 ### Docker images: 
 
@@ -52,11 +58,6 @@ The pipeline uses two docker images:
 
 1. peresay/suite
 2. williamlees/ogrdbstats
-
-
-### Additional files:
-
-> The reference set for the IGHV, IGHD, and IGHJ can be found in this github repository (link).
 
 
 
